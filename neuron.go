@@ -1,5 +1,7 @@
 /*
-A single neuron, can backprop itself to learn weights.
+Neuron: A single neuron, can backprop itself to learn weights.
+NeuronLayer: N inputs to K neurons. So takes N dimensional input to K dimensional output. There are no size requirments between N and K.
+StackedNet: takes N dimensional input to K dimensional output with M layers of various dimensions.
 */
 
 package AutoEncoder
@@ -17,6 +19,10 @@ type Neuron struct {
 
 type NeuronLayer struct {
      nodes []*Neuron
+}
+
+type StackedNet struct {
+    layers []*NeuronLayer
 }
 
 func NewNeuonLayer(numInputs, numNeurons int) *NeuronLayer {
