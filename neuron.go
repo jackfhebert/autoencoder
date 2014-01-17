@@ -13,19 +13,28 @@ import (
 )
 
 type Neuron struct {
+        // The learning rate for the neuron. Controls how quickly it proceeds through gradient descence.
 	alpha   float64
+	// Penalty value for large weights to perform some amount of regularization.
 	decay   float64
+	// The weights for the N inputs to this node. Should be one more weight than inputs to handle the bias unit. That weight will be last in the list.
 	weights []float64
 }
 
+// Wrapper structure and logic for a set of neurons fully connected to a set of input. This allows learning K functions over N inputs.
 type NeuronLayer struct {
+     // The list of neurons comprising this layer.
      nodes []*Neuron
 }
 
+// Wrapper structure around an ordered list of NeuronLayers.
+// The layers are connected together in order.
 type StackedNet struct {
     layers []*NeuronLayer
 }
 
+// Create a new StackedNet of the given dimensions. Passing a list like {10, 20, 20} would say that the input is of 10 dimensions and will create two NeuronLayers each with 20 dimensions.
+// Another valid choid would be {10, 20, 2} where the hidden layer has 20 dimensions but the final output only has 2.
 func NewStackedNet(dimensions []int) *StackedNet {
      // The first dimensions specifies the initial input, it
      // isn't a layer in the stack.
@@ -39,6 +48,7 @@ func NewStackedNet(dimensions []int) *StackedNet {
   return stack
 }
 
+// Create a new NeuronLayer with the given number of neurons, each ready to deal with N inputs.
 func NewNeuronLayer(numInputs, numNeurons int) *NeuronLayer {
   layer := &NeuronLayer{make([]*Neuron, numNeurons)}
   for i := 0; i < len(layer.nodes); i++ {
