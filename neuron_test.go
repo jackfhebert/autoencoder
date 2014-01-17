@@ -135,5 +135,79 @@ func Test_LearnAnd(t *testing.T) {
 	if neuron.Predict(inputs) > .5 {
 		t.Error("failed on 0 1's")
 	}
+}
+
+
+//
+func Test_LearnLayerAndOrAnd(t *testing.T) {
+	layer := NewNeuronLayer(2, 3)
+	inputs := []float64{0, 0}
+	outputs := []float64{0, 0, 0}
+
+	for i := 0; i < 150000; i++ {
+		// Each iteration, randomize the inputs.
+		inputs = []float64{0, 0}
+		outputs = []float64{0, 0, 0}
+		layer.Update(inputs, outputs)
+		inputs = []float64{0, 1}
+		outputs = []float64{0, 1, 0}
+		layer.Update(inputs, outputs)
+		inputs = []float64{1, 0}
+		outputs = []float64{0, 1, 0}
+		layer.Update(inputs, outputs)
+		inputs = []float64{1, 1}
+		outputs = []float64{1, 1, 1}
+		layer.Update(inputs, outputs)
+	}
+	layer.PrintDebugString("AndOrAnd")
+
+	
+	inputs = []float64{0, 0}
+	outputs = layer.Predict(inputs)
+	if outputs[0] > .5 {
+		t.Error("failed on all 1's")
+	}
+	if outputs[1] > .5 {
+		t.Error("failed on all 1's")
+	}
+	if outputs[2] > .5 {
+		t.Error("failed on all 1's")
+	}
+
+	inputs = []float64{0, 1}
+	outputs = layer.Predict(inputs)
+	if outputs[0] > .5 {
+		t.Error("failed on all 1's")
+	}
+	if outputs[1] < .5 {
+		t.Error("failed on all 1's")
+	}
+	if outputs[2] > .5 {
+		t.Error("failed on all 1's")
+	}
+
+	inputs = []float64{1, 0}
+	outputs = layer.Predict(inputs)
+	if outputs[0] > .5 {
+		t.Error("failed on all 1's")
+	}
+	if outputs[1] < .5 {
+		t.Error("failed on all 1's")
+	}
+	if outputs[2] > .5 {
+		t.Error("failed on all 1's")
+	}
+
+	inputs = []float64{1, 1}
+	outputs = layer.Predict(inputs)
+	if outputs[0] < .5 {
+		t.Error("failed on all 1's")
+	}
+	if outputs[1] < .5 {
+		t.Error("failed on all 1's")
+	}
+	if outputs[2] < .5 {
+		t.Error("failed on all 1's")
+	}
 
 }

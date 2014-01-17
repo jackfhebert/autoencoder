@@ -7,6 +7,7 @@ StackedNet: takes N dimensional input to K dimensional output with M layers of v
 package AutoEncoder
 
 import (
+       "fmt"
 	"math"
 	"math/rand"
 )
@@ -25,7 +26,7 @@ type StackedNet struct {
     layers []*NeuronLayer
 }
 
-func NewNeuonLayer(numInputs, numNeurons int) *NeuronLayer {
+func NewNeuronLayer(numInputs, numNeurons int) *NeuronLayer {
   layer := &NeuronLayer{make([]*Neuron, numNeurons)}
   for i := 0; i < len(layer.nodes); i++ {
     layer.nodes[i] = NewNeuron(numInputs)
@@ -111,7 +112,7 @@ func (node *Neuron) Update(input []float64, result float64) float64 {
 
 func (node *Neuron) updateByError(input []float64, error float64) []float64 {
 	// Update the weight per input to get closer to the desired output.
-	weightedError := make([]float64, len(node.weights))
+	weightedError := make([]float64, len(input))
 	for i := 0; i < len(input); i++ {
 		weightedError[i] = error * node.weights[i]
 		node.weights[i] += updateWeight(
@@ -119,8 +120,17 @@ func (node *Neuron) updateByError(input []float64, error float64) []float64 {
 
 	}
         index := len(node.weights) - 1
-        weightedError[index] = error * node.weights[index]
 	node.weights[index] += updateWeight(
 		  1, error, node.weights[index], node)
 	return weightedError
+}
+
+func (node *Neuron) PrintDebugString(prefix string) {
+  fmt.Println(prefix, node.weights)
+}
+
+func (layer *NeuronLayer) PrintDebugString(prefix string) {
+  for i := 0; i < len(layer.nodes); i++ {
+    layer.nodes[i].PrintDebugString(prefix)
+  }
 }
