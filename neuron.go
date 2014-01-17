@@ -26,6 +26,19 @@ type StackedNet struct {
     layers []*NeuronLayer
 }
 
+func NewStackedNet(dimensions []int) *StackedNet {
+     // The first dimensions specifies the initial input, it
+     // isn't a layer in the stack.
+     stack := &StackedNet{make([]*NeuronLayer, len(dimensions) - 1)}
+     previousSize := dimensions[0]
+     for i := 1; i < len(dimensions); i++ {
+       currentSize := dimensions[i]
+       stack.layers[i - 1] = NewNeuronLayer(previousSize, currentSize)
+       previousSize = currentSize
+     }
+  return stack
+}
+
 func NewNeuronLayer(numInputs, numNeurons int) *NeuronLayer {
   layer := &NeuronLayer{make([]*Neuron, numNeurons)}
   for i := 0; i < len(layer.nodes); i++ {
@@ -45,6 +58,13 @@ func NewNeuron(numInputs int) *Neuron {
 	return node
 }
 
+func (stack *StackedNet) Predict(input []float64) []float64 {
+  workingInputs := input
+  for i := 0; i < len(stack.layers); i++ {
+    workingInputs = stack.layers[i].Predict(workingInputs)
+  }
+  return workingInputs
+}
 
 func (layer *NeuronLayer) Predict(input []float64) []float64 {
   result := make([]float64, len(layer.nodes))
@@ -75,6 +95,10 @@ func updateWeight(input, error, weight float64, node *Neuron) float64 {
      // Add in a penalty for large weights.
      decay := node.decay * weight
      return -1 * node.alpha * (grad + decay)
+}
+
+func (stack *StackedNet) Update(input, target []float64) {
+  
 }
 
 func (layer *NeuronLayer) Update(input, target []float64) []float64 {
