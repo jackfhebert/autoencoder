@@ -70,7 +70,30 @@ func updateWeight(input, error, weight float64, node *Neuron) float64 {
      return -1 * node.alpha * (grad + decay)
 }
 
-func (layer *NeuronLayer) Update(input, result []float64, 
+func (layer *NeuronLayer) Update(input, target []float64) []float64 {
+  layerOutput := layer.Predict(input)
+  nodeError := make([]float64, len(layer.nodes))
+  for i := 0; i < len(layer.nodes); i++ {
+    nodeError[i] = layerOutput[i] - target[i]
+  }
+  return layer.updateByError(input, nodeError)
+}
+
+func (layer *NeuronLayer) updateByError(input, error []float64) []float64 {
+  mergedInputError := make([]float64, len(input))
+  for i := 0; i < len(mergedInputError); i++ {
+    mergedInputError[i] = 0
+  }
+
+  for i := 0; i < len(layer.nodes); i++ {
+    nodeError := error[i]
+    weightedInputError := layer.nodes[i].updateByError(input, nodeError)
+    for j := 0; j < len(weightedInputError); j++ {
+      mergedInputError[j] += weightedInputError[j]
+    }
+  }
+  return mergedInputError
+}
 
 func (node *Neuron) Update(input []float64, result float64) float64 {
 	// Figure out what this node would output.
@@ -80,14 +103,18 @@ func (node *Neuron) Update(input []float64, result float64) float64 {
 	return error
 }
 
-func (node *Neuron) updateByError(input []float64, error float64) {
+func (node *Neuron) updateByError(input []float64, error float64) []float64 {
 	// Update the weight per input to get closer to the desired output.
+	weightedError := make([]float64, len(node.weights))
 	for i := 0; i < len(input); i++ {
+		weightedError[i] = error * node.weights[i]
 		node.weights[i] += updateWeight(
 				input[i], error, node.weights[i], node)
 
 	}
         index := len(node.weights) - 1
+        weightedError[index] = error * node.weights[index]
 	node.weights[index] += updateWeight(
 		  1, error, node.weights[index], node)
+	return weightedError
 }
