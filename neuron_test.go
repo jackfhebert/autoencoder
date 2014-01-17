@@ -26,7 +26,8 @@ func Test_LearnOr(t *testing.T) {
 
 		neuron.Update(inputs, result)
 	}
-	fmt.Println("OR", neuron.weights)
+	neuron.PrintDebugString("OR")
+
 	inputs = []float64{1, 1, 1}
 	if neuron.Predict(inputs) < .5 {
 		t.Error("failed on all 1's")
@@ -89,7 +90,7 @@ func Test_LearnAnd(t *testing.T) {
 
 		neuron.Update(inputs, result)
 	}
-	fmt.Println("AND", neuron.weights)
+	neuron.PrintDebugString("AND")
 
 	inputs = []float64{1, 1, 1}
 	if neuron.Predict(inputs) < .5 {
