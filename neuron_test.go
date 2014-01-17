@@ -138,7 +138,6 @@ func Test_LearnAnd(t *testing.T) {
 	}
 }
 
-
 //
 func Test_LearnLayerAndOrAnd(t *testing.T) {
 	layer := NewNeuronLayer(2, 3)
@@ -162,7 +161,6 @@ func Test_LearnLayerAndOrAnd(t *testing.T) {
 	}
 	layer.PrintDebugString("AndOrAnd")
 
-	
 	inputs = []float64{0, 0}
 	outputs = layer.Predict(inputs)
 	if outputs[0] > .5 {
@@ -210,5 +208,13 @@ func Test_LearnLayerAndOrAnd(t *testing.T) {
 	if outputs[2] < .5 {
 		t.Error("failed on all 1's")
 	}
+}
 
+func Test_CreateStack(t * testing.T) {
+     dimensions := []int{3, 2, 1}
+     stack := NewStackedNet(dimensions)
+     // Expect this to print 2 neurons in the first layer, 1 in the second layer.
+     // The first ones should have 4 weights (3 inputs, 1 bias) and the second
+     // should have 3 weights (2 nodes, 1 bias).
+     stack.PrintDebugString("test construction")
 }

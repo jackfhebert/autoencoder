@@ -7,54 +7,55 @@ StackedNet: takes N dimensional input to K dimensional output with M layers of v
 package AutoEncoder
 
 import (
-       "fmt"
+	"fmt"
 	"math"
 	"math/rand"
+	"strconv"
 )
 
 type Neuron struct {
-        // The learning rate for the neuron. Controls how quickly it proceeds through gradient descence.
-	alpha   float64
+	// The learning rate for the neuron. Controls how quickly it proceeds through gradient descence.
+	alpha float64
 	// Penalty value for large weights to perform some amount of regularization.
-	decay   float64
+	decay float64
 	// The weights for the N inputs to this node. Should be one more weight than inputs to handle the bias unit. That weight will be last in the list.
 	weights []float64
 }
 
 // Wrapper structure and logic for a set of neurons fully connected to a set of input. This allows learning K functions over N inputs.
 type NeuronLayer struct {
-     // The list of neurons comprising this layer.
-     nodes []*Neuron
+	// The list of neurons comprising this layer.
+	nodes []*Neuron
 }
 
 // Wrapper structure around an ordered list of NeuronLayers.
 // The layers are connected together in order.
 type StackedNet struct {
-    layers []*NeuronLayer
+	layers []*NeuronLayer
 }
 
 // Create a new StackedNet of the given dimensions. Passing a list like {10, 20, 20} would say that the input is of 10 dimensions and will create two NeuronLayers each with 20 dimensions.
 // Another valid choid would be {10, 20, 2} where the hidden layer has 20 dimensions but the final output only has 2.
 func NewStackedNet(dimensions []int) *StackedNet {
-     // The first dimensions specifies the initial input, it
-     // isn't a layer in the stack.
-     stack := &StackedNet{make([]*NeuronLayer, len(dimensions) - 1)}
-     previousSize := dimensions[0]
-     for i := 1; i < len(dimensions); i++ {
-       currentSize := dimensions[i]
-       stack.layers[i - 1] = NewNeuronLayer(previousSize, currentSize)
-       previousSize = currentSize
-     }
-  return stack
+	// The first dimensions specifies the initial input, it
+	// isn't a layer in the stack.
+	stack := &StackedNet{make([]*NeuronLayer, len(dimensions)-1)}
+	previousSize := dimensions[0]
+	for i := 1; i < len(dimensions); i++ {
+		currentSize := dimensions[i]
+		stack.layers[i-1] = NewNeuronLayer(previousSize, currentSize)
+		previousSize = currentSize
+	}
+	return stack
 }
 
 // Create a new NeuronLayer with the given number of neurons, each ready to deal with N inputs.
 func NewNeuronLayer(numInputs, numNeurons int) *NeuronLayer {
-  layer := &NeuronLayer{make([]*Neuron, numNeurons)}
-  for i := 0; i < len(layer.nodes); i++ {
-    layer.nodes[i] = NewNeuron(numInputs)
-  }
-  return layer
+	layer := &NeuronLayer{make([]*Neuron, numNeurons)}
+	for i := 0; i < len(layer.nodes); i++ {
+		layer.nodes[i] = NewNeuron(numInputs)
+	}
+	return layer
 }
 
 func NewNeuron(numInputs int) *Neuron {
@@ -69,21 +70,23 @@ func NewNeuron(numInputs int) *Neuron {
 }
 
 func (stack *StackedNet) Predict(input []float64) []float64 {
-  workingInputs := input
-  for i := 0; i < len(stack.layers); i++ {
-    workingInputs = stack.layers[i].Predict(workingInputs)
-  }
-  return workingInputs
+        // Walk through the layers, passing the intermediate inputs through.
+	workingInputs := input
+	for i := 0; i < len(stack.layers); i++ {
+		workingInputs = stack.layers[i].Predict(workingInputs)
+	}
+	return workingInputs
 }
 
 func (layer *NeuronLayer) Predict(input []float64) []float64 {
-  result := make([]float64, len(layer.nodes))
-  for i := 0; i < len(layer.nodes); i++ {
-    result[i] = layer.nodes[i].Predict(input)
-  }
-  return result
+        // Build the array to hold the final results, one per node.
+	result := make([]float64, len(layer.nodes))
+	// Compute each nodes output.
+	for i := 0; i < len(layer.nodes); i++ {
+		result[i] = layer.nodes[i].Predict(input)
+	}
+	return result
 }
-
 
 // Compute the activation of this node.
 func (node *Neuron) Predict(input []float64) float64 {
@@ -96,44 +99,53 @@ func (node *Neuron) Predict(input []float64) float64 {
 	// Add in the activation for the bias unit.
 	value += 1 * node.weights[len(node.weights)-1]
 
+	// Sigmoid 0 ranges from [0, 1]
 	return 1.0 / (1 + math.Exp(-value))
 }
 
 func updateWeight(input, error, weight float64, node *Neuron) float64 {
-     // This is the gradient of the error function.
-     grad := error * input
-     // Add in a penalty for large weights.
-     decay := node.decay * weight
-     return -1 * node.alpha * (grad + decay)
+	// This is the gradient of the error function.
+	grad := error * input
+	// Add in a penalty for large weights.
+	decay := node.decay * weight
+	return -1 * node.alpha * (grad + decay)
 }
 
 func (stack *StackedNet) Update(input, target []float64) {
-  
+
 }
 
 func (layer *NeuronLayer) Update(input, target []float64) []float64 {
-  layerOutput := layer.Predict(input)
-  nodeError := make([]float64, len(layer.nodes))
-  for i := 0; i < len(layer.nodes); i++ {
-    nodeError[i] = layerOutput[i] - target[i]
-  }
-  return layer.updateByError(input, nodeError)
+        // Get all of the outputs for the layer.
+	layerOutput := layer.Predict(input)
+	// Build up an array of the errors per node measures from the provided target output.
+	nodeError := make([]float64, len(layer.nodes))
+	for i := 0; i < len(layer.nodes); i++ {
+		nodeError[i] = layerOutput[i] - target[i]
+	}
+ 	// Pass that off to a function to update the weights.
+	return layer.updateByError(input, nodeError)
 }
 
 func (layer *NeuronLayer) updateByError(input, error []float64) []float64 {
-  mergedInputError := make([]float64, len(input))
-  for i := 0; i < len(mergedInputError); i++ {
-    mergedInputError[i] = 0
-  }
+        // Want to return a merged error to the inputs. This makes most sense
+	// in a stacked net and very little in a single layer.
+     	mergedInputError := make([]float64, len(input))
+	for i := 0; i < len(mergedInputError); i++ {
+		mergedInputError[i] = 0
+	}
 
-  for i := 0; i < len(layer.nodes); i++ {
-    nodeError := error[i]
-    weightedInputError := layer.nodes[i].updateByError(input, nodeError)
-    for j := 0; j < len(weightedInputError); j++ {
-      mergedInputError[j] += weightedInputError[j]
-    }
-  }
-  return mergedInputError
+	// For each node, update it for the provided error value. This takes all of the inputs
+	// that the node was given, so it updates the set of weights.
+	for i := 0; i < len(layer.nodes); i++ {
+		nodeError := error[i]
+		weightedInputError := layer.nodes[i].updateByError(input, nodeError)
+		// Merge the input error terms from this node into the array.
+		for j := 0; j < len(weightedInputError); j++ {
+			mergedInputError[j] += weightedInputError[j]
+		}
+	}
+	return mergedInputError
 }
 
 func (node *Neuron) Update(input []float64, result float64) float64 {
@@ -150,21 +162,30 @@ func (node *Neuron) updateByError(input []float64, error float64) []float64 {
 	for i := 0; i < len(input); i++ {
 		weightedError[i] = error * node.weights[i]
 		node.weights[i] += updateWeight(
-				input[i], error, node.weights[i], node)
+			input[i], error, node.weights[i], node)
 
 	}
-        index := len(node.weights) - 1
+	index := len(node.weights) - 1
 	node.weights[index] += updateWeight(
-		  1, error, node.weights[index], node)
+		1, error, node.weights[index], node)
 	return weightedError
 }
 
+// Print some debug info about this neuron.
 func (node *Neuron) PrintDebugString(prefix string) {
-  fmt.Println(prefix, node.weights)
+	fmt.Println(prefix, node.weights)
 }
 
+// Print some debug info about this layer, notable the neurons it contains.
 func (layer *NeuronLayer) PrintDebugString(prefix string) {
-  for i := 0; i < len(layer.nodes); i++ {
-    layer.nodes[i].PrintDebugString(prefix)
+	for i := 0; i < len(layer.nodes); i++ {
+		layer.nodes[i].PrintDebugString(prefix)
+	}
+}
+
+// Print some debug info about a stack, with notes for each layer.
+func (stack *StackedNet) PrintDebugString(prefix string) {
+  for i := 0; i < len(stack.layers); i++ {
+    stack.layers[i].PrintDebugString(prefix + ":layer_" + strconv.Itoa(i))
   }
 }
