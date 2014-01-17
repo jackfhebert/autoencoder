@@ -13,26 +13,40 @@ type Neuron struct {
 	alpha   float64
 	decay   float64
 	weights []float64
-	inputs  chan<- float64
-	outputs <-chan float64
+}
+
+type NeuronLayer struct {
+     nodes []*Neuron
+}
+
+func NewNeuonLayer(numInputs, numNeurons int) *NeuronLayer {
+  layer := &NeuronLayer{make([]*Neuron, numNeurons)}
+  for i := 0; i < len(layer.nodes); i++ {
+    layer.nodes[i] = NewNeuron(numInputs)
+  }
+  return layer
 }
 
 func NewNeuron(numInputs int) *Neuron {
 	// Want the number of weights to be 1 longer than the number
 	// of inputs - this simulates having a bias unit- sorta like
 	// that silly +C back when you did calculus.
-	node := &Neuron{0.05, 0.005, make([]float64, numInputs+1), nil, nil}
+	node := &Neuron{0.2, 0.01, make([]float64, numInputs+1)}
 	for i := 0; i < len(node.weights); i++ {
 		node.weights[i] = rand.Float64()*.5 - 0.25
 	}
 	return node
 }
 
-func (node *Neuron) Process() {
-	// This should weight for either channel to have a value, but only
-	// if the channels exist.
 
+func (layer *NeuronLayer) Predict(input []float64) []float64 {
+  result := make([]float64, len(layer.nodes))
+  for i := 0; i < len(layer.nodes); i++ {
+    result[i] = layer.nodes[i].Predict(input)
+  }
+  return result
 }
+
 
 // Compute the activation of this node.
 func (node *Neuron) Predict(input []float64) float64 {
@@ -48,23 +62,32 @@ func (node *Neuron) Predict(input []float64) float64 {
 	return 1.0 / (1 + math.Exp(-value))
 }
 
+func updateWeight(input, error, weight float64, node *Neuron) float64 {
+     // This is the gradient of the error function.
+     grad := error * input
+     // Add in a penalty for large weights.
+     decay := node.decay * weight
+     return -1 * node.alpha * (grad + decay)
+}
+
+func (layer *NeuronLayer) Update(input, result []float64, 
+
 func (node *Neuron) Update(input []float64, result float64) float64 {
 	// Figure out what this node would output.
 	wouldOutput := node.Predict(input)
+	error := wouldOutput - result
+	node.updateByError(input, error)
+	return error
+}
 
+func (node *Neuron) updateByError(input []float64, error float64) {
 	// Update the weight per input to get closer to the desired output.
 	for i := 0; i < len(input); i++ {
-		// This is the gradient of the error function.
-		grad := (wouldOutput - result) * input[i]
-		// Add in a penalty for large weights.
-		decay := node.decay * node.weights[i]
-		node.weights[i] -= node.alpha * (grad + decay)
+		node.weights[i] += updateWeight(
+				input[i], error, node.weights[i], node)
+
 	}
-
-	// Update the bias node which always has an input value of 1.
-	grad := (wouldOutput - result)
-	decay := node.decay * node.weights[len(node.weights)-1]
-
-	node.weights[len(node.weights)-1] -= node.alpha * (grad + decay)
-	return result - wouldOutput
+        index := len(node.weights) - 1
+	node.weights[index] += updateWeight(
+		  1, error, node.weights[index], node)
 }

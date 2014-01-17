@@ -75,7 +75,7 @@ func Test_LearnAnd(t *testing.T) {
 	neuron := NewNeuron(3)
 	inputs := []float64{0, 0, 0}
 	result := 0.0
-	for i := 0; i < 50000; i++ {
+	for i := 0; i < 150000; i++ {
 		// Each iteration, randomize the inputs.
 		result = 1
 		for j := 0; j < len(inputs); j++ {
