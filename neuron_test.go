@@ -210,16 +210,16 @@ func Test_LearnLayerAndOrAnd(t *testing.T) {
 	}
 }
 
-func Test_StackLearnAndOrAnd(t * testing.T) {
-     dimensions := []int{2, 2, 3}
-     stack := NewStackedNet(dimensions)
-     // Expect this to print 3 neurons in the first layer, 3 in the second layer.
-     // The first ones should have 3 weights (2 inputs, 1 bias) and the second
-     // should have 4 weights (3 nodes, 1 bias).
+func Test_StackLearnAndOrAnd(t *testing.T) {
+	dimensions := []int{2, 2, 3}
+	stack := NewStackedNet(dimensions)
+	// Expect this to print 3 neurons in the first layer, 3 in the second layer.
+	// The first ones should have 3 weights (2 inputs, 1 bias) and the second
+	// should have 4 weights (3 nodes, 1 bias).
 	inputs := []float64{0, 0}
 	outputs := []float64{0, 0, 0}
 
-     for i := 0; i < 3500; i++ {
+	for i := 0; i < 3500; i++ {
 		// Each iteration, randomize the inputs.
 		inputs = []float64{0, 0}
 		outputs = []float64{0, 0, 0}
@@ -286,11 +286,11 @@ func Test_StackLearnAndOrAnd(t * testing.T) {
 
 }
 
-func Test_StackConstructor(t * testing.T) {
-     dimensions := []int{3, 2, 1}
-     stack := NewStackedNet(dimensions)
-     // Expect this to print 2 neurons in the first layer, 1 in the second layer.
-     // The first ones should have 4 weights (3 inputs, 1 bias) and the second
-     // should have 3 weights (2 nodes, 1 bias).
-     stack.PrintDebugString("test construction")
+func Test_StackConstructor(t *testing.T) {
+	dimensions := []int{3, 2, 1}
+	stack := NewStackedNet(dimensions)
+	// Expect this to print 2 neurons in the first layer, 1 in the second layer.
+	// The first ones should have 4 weights (3 inputs, 1 bias) and the second
+	// should have 3 weights (2 nodes, 1 bias).
+	stack.PrintDebugString("test construction")
 }
