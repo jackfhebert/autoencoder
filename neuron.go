@@ -2,6 +2,8 @@
 Neuron: A single neuron, can backprop itself to learn weights.
 NeuronLayer: N inputs to K neurons. So takes N dimensional input to K dimensional output. There are no size requirments between N and K.
 StackedNet: takes N dimensional input to K dimensional output with M layers of various dimensions.
+
+TODO: test learning XOR.
 */
 
 package AutoEncoder
