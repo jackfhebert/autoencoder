@@ -210,7 +210,83 @@ func Test_LearnLayerAndOrAnd(t *testing.T) {
 	}
 }
 
-func Test_CreateStack(t * testing.T) {
+func Test_StackLearnAndOrAnd(t * testing.T) {
+     dimensions := []int{2, 2, 3}
+     stack := NewStackedNet(dimensions)
+     // Expect this to print 3 neurons in the first layer, 3 in the second layer.
+     // The first ones should have 3 weights (2 inputs, 1 bias) and the second
+     // should have 4 weights (3 nodes, 1 bias).
+	inputs := []float64{0, 0}
+	outputs := []float64{0, 0, 0}
+
+     for i := 0; i < 3500; i++ {
+		// Each iteration, randomize the inputs.
+		inputs = []float64{0, 0}
+		outputs = []float64{0, 0, 0}
+		stack.Update(inputs, outputs)
+		inputs = []float64{0, 1}
+		outputs = []float64{0, 1, 0}
+		stack.Update(inputs, outputs)
+		inputs = []float64{1, 0}
+		outputs = []float64{0, 1, 0}
+		stack.Update(inputs, outputs)
+		inputs = []float64{1, 1}
+		outputs = []float64{1, 1, 1}
+		stack.Update(inputs, outputs)
+	}
+	stack.PrintDebugString("AndOrAndStack")
+
+	inputs = []float64{0, 0}
+	outputs = stack.Predict(inputs)
+	if outputs[0] > .5 {
+		t.Error("failed on all 0's", outputs[0])
+	}
+	if outputs[1] > .5 {
+		t.Error("failed on all 0's", outputs[1])
+	}
+	if outputs[2] > .5 {
+		t.Error("failed on all 0's")
+	}
+
+	inputs = []float64{0, 1}
+	outputs = stack.Predict(inputs)
+	if outputs[0] > .5 {
+		t.Error("failed on some 1's")
+	}
+	if outputs[1] < .5 {
+		t.Error("failed on some 1's")
+	}
+	if outputs[2] > .5 {
+		t.Error("failed on some 1's")
+	}
+
+	inputs = []float64{1, 0}
+	outputs = stack.Predict(inputs)
+	if outputs[0] > .5 {
+		t.Error("failed on some 1's")
+	}
+	if outputs[1] < .5 {
+		t.Error("failed on some 1's")
+	}
+	if outputs[2] > .5 {
+		t.Error("failed on some 1's")
+	}
+
+	inputs = []float64{1, 1}
+	outputs = stack.Predict(inputs)
+	if outputs[0] < .5 {
+		t.Error("failed on all 1's", outputs[0])
+	}
+	if outputs[1] < .5 {
+		t.Error("failed on all 1's", outputs[1])
+	}
+	if outputs[2] < .5 {
+		t.Error("failed on all 1's", outputs[2])
+	}
+
+}
+
+func Test_StackConstructor(t * testing.T) {
      dimensions := []int{3, 2, 1}
      stack := NewStackedNet(dimensions)
      // Expect this to print 2 neurons in the first layer, 1 in the second layer.

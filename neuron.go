@@ -112,7 +112,28 @@ func updateWeight(input, error, weight float64, node *Neuron) float64 {
 }
 
 func (stack *StackedNet) Update(input, target []float64) {
+     inputsByLayer := make([][]float64, len(stack.layers) + 1)
+     inputsByLayer[0] = input
+     for i := 0; i < len(stack.layers); i++ {
+       inputsByLayer[i + 1] = stack.layers[i].Predict(inputsByLayer[i])
+     }
+     lastLayer := len(stack.layers) - 1
+     //fmt.Println("target:", target)
+     error := stack.layers[lastLayer].Update(inputsByLayer[lastLayer], target)
+     for i := 0; i < len(error); i++ {
+     	 activation := inputsByLayer[lastLayer][i]     
+     	 error[i] = error[i] * activation * (1 - activation)
+     }
 
+     //fmt.Println("error:", error)
+     for i := len(stack.layers) - 2; i >= 0; i-- {
+     	 error = stack.layers[i].updateByError(inputsByLayer[i], error)
+         for j := 0; j < len(error); j++ {
+     	 activation := inputsByLayer[i][j]     
+     	 error[j] = error[j] * activation * (1 - activation)
+     }
+	 //fmt.Println("next error:", error)
+     }
 }
 
 func (layer *NeuronLayer) Update(input, target []float64) []float64 {
