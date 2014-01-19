@@ -4,14 +4,12 @@ NeuronLayer: N inputs to K neurons. So takes N dimensional input to K
   dimensional output. There are no size requirments between N and K.
 StackedNet: takes N dimensional input to K dimensional output with M
   layers of various dimensions.
-
-TODO: test learning XOR.
 */
 
 package AutoEncoder
 
 import (
-	"fmt"
+	//"fmt"
 	"math"
 	"math/rand"
 	"strconv"
@@ -78,11 +76,11 @@ func NewNeuron(numInputs int) *Neuron {
 	// Want the number of weights to be 1 longer than the number
 	// of inputs - this simulates having a bias unit- sorta like
 	// that silly +C back when you did calculus.
-	node := &Neuron{0.2, 0.01, make([]float64, numInputs+1)}
+	node := &Neuron{0.05, 0.0, make([]float64, numInputs+1)}
 	for i := 0; i < len(node.weights); i++ {
 		// Initialize the weights on the domain [-.25, .25].
 		// I have no yet how much the scale matters on init.
-		node.weights[i] = rand.Float64() * .5 - 0.25
+		node.weights[i] = rand.Float64()*.5 - 0.25
 	}
 	return node
 }
@@ -103,6 +101,8 @@ func (layer *NeuronLayer) Predict(input []float64) []float64 {
 	// Compute each nodes output.
 	for i := 0; i < len(layer.nodes); i++ {
 		result[i] = layer.nodes[i].Predict(input)
+		layer.nodes[i].PrintDebugString("   ")
+		//fmt.Println("  input", input, "result", result[i])
 	}
 	return result
 }
@@ -138,23 +138,38 @@ func updateWeight(input, error, weight float64, node *Neuron) float64 {
 func (stack *StackedNet) Update(input, target []float64) {
 	inputsByLayer := make([][]float64, len(stack.layers)+1)
 	inputsByLayer[0] = input
+	//fmt.Println("input", inputsByLayer[0], "target", target)
 	for i := 0; i < len(stack.layers); i++ {
 		inputsByLayer[i+1] = stack.layers[i].Predict(inputsByLayer[i])
+		//fmt.Println("next layer:", inputsByLayer[i + 1])
+
 	}
 	lastLayer := len(stack.layers) - 1
+	//fmt.Println("target was:", target, "inputs by layer", inputsByLayer)
 
 	error := stack.layers[lastLayer].Update(inputsByLayer[lastLayer], target)
+	//fmt.Println("Last layer after update:", stack.layers[lastLayer].Predict(inputsByLayer[lastLayer]))
+
 	for i := 0; i < len(error); i++ {
 		activation := inputsByLayer[lastLayer][i]
-		error[i] = error[i] * activation * (1 - activation)
+		error[i] = error[i] * activation * (1.0 - activation)
 	}
+	//fmt.Println("target", target, "activation", inputsByLayer[lastLayer])
+	//fmt.Println("initial error", error)
 
 	for i := len(stack.layers) - 2; i >= 0; i-- {
 		error = stack.layers[i].updateByError(inputsByLayer[i], error)
+		//fmt.Println("layer after update:", stack.layers[i].Predict(inputsByLayer[i]))
+
+		//fmt.Println("layer after update:", stack.layers[i+1].Predict(stack.layers[i].Predict(inputsByLayer[i])))
+
+		//fmt.Println("error before", error)
+		//fmt.Println("layer activation", inputsByLayer[i])
 		for j := 0; j < len(error); j++ {
 			activation := inputsByLayer[i][j]
-			error[j] = error[j] * activation * (1 - activation)
+			error[j] = error[j] * activation * (1.0 - activation)
 		}
+		//fmt.Println("error", error)
 	}
 }
 
@@ -212,6 +227,7 @@ func (node *Neuron) updateByError(input []float64, error float64) []float64 {
 	// Update the weight per input to get closer to the desired output.
 	weightedError := make([]float64, len(input))
 	for i := 0; i < len(input); i++ {
+		//fmt.Println("at node error", error, "weight", node.weights[i])
 		weightedError[i] = error * node.weights[i]
 		node.weights[i] += updateWeight(
 			input[i], error, node.weights[i], node)
@@ -225,7 +241,7 @@ func (node *Neuron) updateByError(input []float64, error float64) []float64 {
 
 // Print some debug info about this neuron.
 func (node *Neuron) PrintDebugString(prefix string) {
-	fmt.Println(prefix, node.weights)
+	//fmt.Println(prefix, node.weights)
 }
 
 // Print some debug info about this layer, notable the neurons it contains.

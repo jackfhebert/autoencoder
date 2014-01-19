@@ -138,7 +138,7 @@ func Test_LearnAnd(t *testing.T) {
 	}
 }
 
-//
+// Test learning output nodes of 'And', 'Or', 'And' from two inputs.
 func Test_LearnLayerAndOrAnd(t *testing.T) {
 	layer := NewNeuronLayer(2, 3)
 	inputs := []float64{0, 0}
@@ -210,12 +210,16 @@ func Test_LearnLayerAndOrAnd(t *testing.T) {
 	}
 }
 
+// Test learning output nodes of 'And', 'Or', 'And' from two inputs.
+// The hidden layer isn't needed, but it also shouldn't mess anything
+// up.
 func Test_StackLearnAndOrAnd(t *testing.T) {
 	dimensions := []int{2, 2, 3}
 	stack := NewStackedNet(dimensions)
-	// Expect this to print 3 neurons in the first layer, 3 in the second layer.
-	// The first ones should have 3 weights (2 inputs, 1 bias) and the second
-	// should have 4 weights (3 nodes, 1 bias).
+	// Expect this to print 2 neurons in the first layer, 3 in the
+	// second layer.
+	// The first ones should have 3 weights (2 inputs, 1 bias) and the
+	// second should have 4 weights (3 nodes, 1 bias).
 	inputs := []float64{0, 0}
 	outputs := []float64{0, 0, 0}
 
@@ -286,11 +290,73 @@ func Test_StackLearnAndOrAnd(t *testing.T) {
 
 }
 
+// Test constructign a stacked net of various dimensions.
 func Test_StackConstructor(t *testing.T) {
 	dimensions := []int{3, 2, 1}
 	stack := NewStackedNet(dimensions)
-	// Expect this to print 2 neurons in the first layer, 1 in the second layer.
-	// The first ones should have 4 weights (3 inputs, 1 bias) and the second
-	// should have 3 weights (2 nodes, 1 bias).
+	// Expect this to print 2 neurons in the first layer, 1 in the
+	// second layer. The first ones should have 4 weights (3 inputs,
+	// 1 bias) and the second should have 3 weights (2 nodes, 1 bias).
 	stack.PrintDebugString("test construction")
+}
+
+// Test learning output nodes of 'And', 'Or', 'And' from two inputs.
+// The hidden layer isn't needed, but it also shouldn't mess anything
+// up.
+func Test_StackLearnXOr(t *testing.T) {
+	dimensions := []int{2, 2, 1}
+	stack := NewStackedNet(dimensions)
+	stack.PrintDebugString("")
+	// Expect this to print 2 neurons in the first layer, 1 in the
+	// second layer. The first ones should have 3 weights (2 inputs,
+	// 1 bias) and the second should have 3 weights (2 nodes, 1 bias).
+	inputs := []float64{0, 0}
+	outputs := []float64{0, 0, 0}
+
+	for i := 0; i < 500000; i++ {
+		// Each iteration, randomize the inputs.
+		x := rand.Float64()
+		if x < .25 {
+			inputs = []float64{0, 0}
+			outputs = []float64{0}
+			stack.Update(inputs, outputs)
+		} else if x < .5 {
+			inputs = []float64{0, 1}
+			outputs = []float64{1}
+			stack.Update(inputs, outputs)
+		} else if x < .75 {
+			inputs = []float64{1, 0}
+			outputs = []float64{1}
+			stack.Update(inputs, outputs)
+		} else {
+			inputs = []float64{1, 1}
+			outputs = []float64{0}
+			stack.Update(inputs, outputs)
+		}
+	}
+	stack.PrintDebugString("XOrStack")
+
+	inputs = []float64{0, 0}
+	outputs = stack.Predict(inputs)
+	if outputs[0] > .5 {
+		t.Error("failed on all 0's", outputs[0])
+	}
+
+	inputs = []float64{0, 1}
+	outputs = stack.Predict(inputs)
+	if outputs[0] < .5 {
+		t.Error("failed on some 1's", outputs[0])
+	}
+
+	inputs = []float64{1, 0}
+	outputs = stack.Predict(inputs)
+	if outputs[0] < .5 {
+		t.Error("failed on some 1's", outputs[0])
+	}
+
+	inputs = []float64{1, 1}
+	outputs = stack.Predict(inputs)
+	if outputs[0] > .5 {
+		t.Error("failed on all 1's", outputs[0])
+	}
 }
