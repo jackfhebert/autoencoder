@@ -25,7 +25,8 @@ type Neuron struct {
 	// The weights for the N inputs to this node. Should be one more
 	// weight than inputs to handle the bias unit. That weight will be
 	// last in the list.
-	weights []float64
+	weights        []float64
+	batchedUpdates []float64
 }
 
 // Wrapper structure and logic for a set of neurons fully connected to a
@@ -76,11 +77,12 @@ func NewNeuron(numInputs int) *Neuron {
 	// Want the number of weights to be 1 longer than the number
 	// of inputs - this simulates having a bias unit- sorta like
 	// that silly +C back when you did calculus.
-	node := &Neuron{0.05, 0.0, make([]float64, numInputs+1)}
+	node := &Neuron{0.05, 0.0, make([]float64, numInputs+1), make([]float64, numInputs+1)}
 	for i := 0; i < len(node.weights); i++ {
 		// Initialize the weights on the domain [-.25, .25].
 		// I have no yet how much the scale matters on init.
 		node.weights[i] = rand.Float64()*.5 - 0.25
+		node.batchedUpdates[i] = 0
 	}
 	return node
 }
@@ -229,14 +231,33 @@ func (node *Neuron) updateByError(input []float64, error float64) []float64 {
 	for i := 0; i < len(input); i++ {
 		//fmt.Println("at node error", error, "weight", node.weights[i])
 		weightedError[i] = error * node.weights[i]
-		node.weights[i] += updateWeight(
+		node.batchedUpdates[i] += updateWeight(
 			input[i], error, node.weights[i], node)
 
 	}
 	index := len(node.weights) - 1
-	node.weights[index] += updateWeight(
+	node.batchedUpdates[index] += updateWeight(
 		1, error, node.weights[index], node)
 	return weightedError
+}
+
+func (stack *StackedNet) ApplyBatchedUpdate() {
+	for i := 0; i < len(stack.layers); i++ {
+		stack.layers[i].ApplyBatchedUpdate()
+	}
+}
+
+func (layer *NeuronLayer) ApplyBatchedUpdate() {
+	for i := 0; i < len(layer.nodes); i++ {
+		layer.nodes[i].ApplyBatchedUpdate()
+	}
+}
+
+func (node *Neuron) ApplyBatchedUpdate() {
+	for i := 0; i < len(node.weights); i++ {
+		node.weights[i] += node.batchedUpdates[i]
+		node.batchedUpdates[i] = 0
+	}
 }
 
 // Print some debug info about this neuron.
