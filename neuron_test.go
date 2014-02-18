@@ -25,6 +25,7 @@ func Test_LearnOr(t *testing.T) {
 		}
 
 		neuron.Update(inputs, result)
+		neuron.ApplyBatchedUpdate()
 	}
 	neuron.PrintDebugString("OR")
 
@@ -89,6 +90,7 @@ func Test_LearnAnd(t *testing.T) {
 		}
 
 		neuron.Update(inputs, result)
+		neuron.ApplyBatchedUpdate()
 	}
 	neuron.PrintDebugString("AND")
 
@@ -158,6 +160,7 @@ func Test_LearnLayerAndOrAnd(t *testing.T) {
 		inputs = []float64{1, 1}
 		outputs = []float64{1, 1, 1}
 		layer.Update(inputs, outputs)
+		layer.ApplyBatchedUpdate()
 	}
 	layer.PrintDebugString("AndOrAnd")
 
@@ -237,6 +240,7 @@ func Test_StackLearnAndOrAnd(t *testing.T) {
 		inputs = []float64{1, 1}
 		outputs = []float64{1, 1, 1}
 		stack.Update(inputs, outputs)
+		stack.ApplyBatchedUpdate()
 	}
 	stack.PrintDebugString("AndOrAndStack")
 
@@ -333,6 +337,7 @@ func Test_StackLearnXOr(t *testing.T) {
 			outputs = []float64{0}
 			stack.Update(inputs, outputs)
 		}
+		stack.ApplyBatchedUpdate()
 	}
 	stack.PrintDebugString("XOrStack")
 
