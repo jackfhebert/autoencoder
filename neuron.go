@@ -77,7 +77,7 @@ func NewNeuron(numInputs int) *Neuron {
 	// Want the number of weights to be 1 longer than the number
 	// of inputs - this simulates having a bias unit- sorta like
 	// that silly +C back when you did calculus.
-	node := &Neuron{0.05, 0.0, make([]float64, numInputs+1), make([]float64, numInputs+1)}
+	node := &Neuron{0.3, 0, make([]float64, numInputs+1), make([]float64, numInputs+1)}
 	for i := 0; i < len(node.weights); i++ {
 		// Initialize the weights on the domain [-.25, .25].
 		// I have no yet how much the scale matters on init.
@@ -132,6 +132,7 @@ func updateWeight(input, error, weight float64, node *Neuron) float64 {
 	grad := error * input
 	// Add in a penalty for large weights. aka regularization.
 	decay := node.decay * weight
+		// TODO(jhebert): I got the decay part wrong.
 	return -1 * node.alpha * (grad + decay)
 }
 
@@ -226,6 +227,11 @@ func (node *Neuron) Update(input []float64, result float64) float64 {
 // Update the weights for a neuron given the input vector and pre-computed
 // error. Returns the weighted error per input.
 func (node *Neuron) updateByError(input []float64, error float64) []float64 {
+	// 1. Need to pass back weighted error.
+	// 2. Need to compute what we would output, to do: output * (1-output).
+	// 
+
+
 	// Update the weight per input to get closer to the desired output.
 	weightedError := make([]float64, len(input))
 	for i := 0; i < len(input); i++ {

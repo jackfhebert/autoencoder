@@ -90,13 +90,15 @@ func Test_LearnAnd(t *testing.T) {
 		}
 
 		neuron.Update(inputs, result)
-		neuron.ApplyBatchedUpdate()
+			if (i % 50 == 0) {
+			neuron.ApplyBatchedUpdate()
+		}
 	}
 	neuron.PrintDebugString("AND")
 
 	inputs = []float64{1, 1, 1}
 	if neuron.Predict(inputs) < .5 {
-		t.Error("failed on all 1's")
+		t.Error("failed on all 1's", neuron.weights)
 		fmt.Println(neuron.weights)
 	}
 
